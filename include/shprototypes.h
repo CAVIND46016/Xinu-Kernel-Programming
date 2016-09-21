@@ -83,3 +83,8 @@ extern  shellcmd xsh_mmu	(int32, char *[]);
 /* in file xsh_hello.c*/
 extern shellcmd xsh_hello	(int32, char *[]);
 /* Added for assignment 1 160916*/
+
+/* Added for assignment 2 210916*/
+/* in file xsh_prodcons.c*/
+extern shellcmd xsh_prodcons	(int32, char *[]);
+/* Added for assignment 2 210916*/

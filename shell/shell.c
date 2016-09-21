@@ -12,6 +12,10 @@ const	struct	cmdent	cmdtab[] = {
 	{"hello",  FALSE,  xsh_hello},
 	/*Added for Assignment 1 160916*/
 
+	/*Added for Assignment 2 210916*/
+	{"prodcons", FALSE, xsh_prodcons},
+	/*Added for Assignment 2 210916*/
+
 	{"argecho",	TRUE,	xsh_argecho},
 	{"cat",		FALSE,	xsh_cat},
 	{"clear",	TRUE,	xsh_clear},
