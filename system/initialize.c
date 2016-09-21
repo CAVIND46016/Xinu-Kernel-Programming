@@ -4,7 +4,10 @@
 
 #include <xinu.h>
 #include <string.h>
+#ifdef ARM_QEMU
 #include <platform.h>
+#endif /* ARM_QEMU */
+
 extern	void	start(void);	/* Start of Xinu code			*/
 extern	void	*_end;		/* End of Xinu code			*/
 
@@ -14,6 +17,8 @@ extern	void main(void);	/* Main is the first process created	*/
 extern	void xdone(void);	/* System "shutdown" procedure		*/
 static	void sysinit(); 	/* Internal system initialization	*/
 extern	void meminit(void);	/* Initializes the free memory list	*/
+
+void am335x_init(void);
 
 /* Declarations of major kernel variables */
 
@@ -25,7 +30,10 @@ struct	memblk	memlist;	/* List of free memory blocks		*/
 
 int	prcount;		/* Total number of live processes	*/
 pid32	currpid;		/* ID of currently executing process	*/
-struct platform platform; 
+#ifdef ARM_QEMU
+struct platform platform;
+#endif /* ARM_QEMU */
+
 /*------------------------------------------------------------------------
  * nulluser - initialize the system and become the null process
  *
@@ -44,21 +52,11 @@ void	nulluser()
 {	
 	struct	memblk	*memptr;	/* Ptr to memory block		*/
 	uint32	free_mem;		/* Total amount of free memory	*/
-	volatile uint32 *wspr = (volatile uint32 *) 0x44E35048;
-	volatile uint32 *wwps = (volatile uint32 *) 0x44E35034;
- 
+
 	/* Initialize the system */
 	sysinit();
 
 	kprintf("\n\r%s\n\n\r", VERSION);
-
-	kprintf("Disable AM335x watchdog timer 1: ");
-	*wspr = 0x0000AAAA;
-	while (*wwps&0x00000010); // Delay while the first write completes
-	*wspr = 0x00005555;
-	while (*wwps&0x00000010); // Delay while the second write completes
-	kprintf("Complete\n\r");
-	
 
 	/* Output Xinu memory layout */
 	free_mem = 0;
@@ -84,6 +82,7 @@ void	nulluser()
 	/* Enable interrupts */
 
 	enable();
+
 	#ifdef MMU
 	/* Initialize MMU(Paging) */
 	initializeMMU();
@@ -120,10 +119,13 @@ static	void	sysinit()
 
 	platinit();
 
-	/* Initialize the interrupt vectors */
-
-	//initevec();
-	
+	/* Initialize the interrupt vectors on BBB.
+	   This is done elsewhere in Embedded Xinu (the QEMU version)
+	*/
+#ifdef ARM_BBB
+	initevec();
+#endif /* ARM_BBB */
+  
 	/* Initialize free memory list */
 	
 	meminit();
@@ -183,6 +185,11 @@ static	void	sysinit()
 	for (i = 0; i < NDEVS; i++) {
 		init(i);
 	}
+
+#ifdef ARM_BBB
+	am335x_init();
+#endif /* ARM_BBB */
+
 	return;
 }
 
