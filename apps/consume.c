@@ -1,5 +1,5 @@
 #include <xinu.h>
-//#include <prodcons.h>
+#include <prodcons.h>
 
 void consumer(int count) {
 	//Code to consume values of global variable 'n' until the value
