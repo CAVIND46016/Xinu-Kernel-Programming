@@ -1,0 +1,56 @@
+/* Assignment 2 Report*/
+/* /home/xinu-os/OS-FA16/Report_Assignment2*/
+
+
+Q. 1) Does your program output any garbage? If yes, why?
+
+ - Yes, the program outputs a garbage value. The global variable 'n' is an integer that is shared by both 
+    processes 'consume' and 'produce'. The producer function executes only a few machine instructions
+    per iteration, and runs through its entire loop whereas the consumer function requires hundreds of machine
+    instructions to write a line of ouput, hence when the consumer resumes execution , it finds the value of n to be equal to
+    the value of variable 'count', entered as command line or taken by as default 2000. 
+
+
+Q. 2) Are all the produced values getting consumed? Check your program for a small count like 20.
+
+ - No, not all values are getting consumed. For a small count like 20, the program outputs consumed goods as
+   final value of count, i.e., 20. Clearly, the producer does not wait for the consumer to access the data item before generating 
+   another and neither does the consumer wait for the producer to manufacture the next item.
+
+
+Functions:
+
+a) void producer.c(int count){}
+   
+ - The function 'producer' accepts an integer variable ( 'count') as parameter. This function uses a for loop to produce values
+    less than or equal to count, which it assigns to global variable 'n'. It prints the total number of good produced which is equal to
+    the value of 'count'.
+     
+
+b) void consumer.c(int count){}
+
+ - The function 'consumer' acceps an integer variable ('count') as parameter. This function consumes values of global variable 'n'
+    until the value of n is less than or equal to count. It prints number of goods consumed.
+
+c) create.c
+
+ - The create function creates a process to start running a procedure. The statement `create(producer...)' asks XINU to create a new 
+    process that executes the procedure `producer'. The other arguments are stack size , a scheduling priority (the OS uses this to allocate 
+    processor time to the process), process name (`producer'), the count of arguments to the process, which are the arguments to the 
+    procedure `producer' and is one in number (variable 'count'). Create sets up the process, leaving it ready to run, but temporarily suspended. 
+    It returns the process id of the new process, which is an integer that identifies the created process so that it may be referenced later.
+
+d) resume.c
+
+ - In the assignment, the main procedure passes the process id created by create statement to `resume', which starts (unsuspends) the process 
+   so it begins executing. The process executes the procedure `producer' and 'consumer', which executes the code written in produce.c and consume.c
+   respectively.
+
+
+Tasks:
+
+Producer function:   Cavin Dsouza
+
+Consumer function: Mildred Noronha
+
+Report:                            Cavin Dsouza & Mildred Noronha

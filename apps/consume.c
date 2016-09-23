@@ -8,7 +8,7 @@ void consumer(int count) {
 
 	int i;
 
-	for(i = 0;i <= count;i++)
+	for(i = 1;i <= count;i++)
 	{
 		printf("Goods consumed: %d\n", n);
 	}
