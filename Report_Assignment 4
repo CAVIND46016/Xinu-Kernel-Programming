@@ -1,0 +1,31 @@
+Assignment 4
+
+Functions used :
+
+1) future* future_alloc(int future_flag);
+	Allocates memory to a new future and sets state to FUTURE_EMPTY
+	Developed by Mildred Noronha and Cavin Dsouza	
+
+2) syscall future_free(future* f):
+	Frees memory in f. 
+	Developed by Mildred Noronha	
+
+3) syscall future_get(future *f, int *value);
+	Gets the value of future set by operation and changes the state of future to FUTURE_WAITING
+	Developed by Cavin Dsouza 
+
+4)  syscall future_set(future *f, int *value) ;
+	Sets the value of future set by operation and changes the state of future to
+	FUTURE_VALID
+	Developed by Mildred Noronha
+
+5) xsh_prodcons.c
+	Developed by Cavin Dsouza and Mildred Noronha
+
+6)uint future_cons(future* fut);
+	Consumes values and prints it.
+	Developed by Cavin Dsouza
+
+7)uint future_prod(future* fut);
+	Produces values and uses future_set to do so.
+	Developed by Mildred Noronha

@@ -1,0 +1,62 @@
+Assignment 3
+
+1) How exactly is sychronization achieved using semaphore in our assignment?
+
+In this assignment, two semaphores 'produced' and 'consumed' are created with initial values 0 and 1, respectively. 
+System calls wait() and signal() are used to synchronise the processes producer and consumer. 
+
+When producer is called, it executes wait(consumed) due to which the count associated with consumed becomes 0. This puts it on the wait list while producer executes its lines of code (i.e. producing values for global variable n). Then, signal(produced) increases the count of producer to 1, allowing it to execute wherein it prints the value " Produced : 1" on the screen. 
+
+Next, the consumer process is called, it executes wait(produced) due to which the count associated with produced decreases to 0 while the signal(consumed) increases the value of consumed to 1. This causes consumer to execute while producer waits. This outputs the next line "Consumed:1", since the value of global variable n is being shared by both processes now.
+
+These processes repeats till the value of count variable is reached. Thus, synchronisation is achieved using two semaphores 'produced' and 'consumed'.
+
+2)Can the above sychronization be achieved with just one semaphore? Why or why not? 
+
+No, the above synchronisation cannot be achieved with just one semaphore. Since, there are two processes, each needs to be synchronized with each other. This can be done if each is associated with a semaphore. 
+
+Consider just one semaphore for the producer process. Even if wait() and signal() calls are placed for this process, the consumer process does not know that it has to wait for the producer to produce values that it can consume in each iteration. Hence, it prints garbage values.
+If we consider only one semaphore for the consumer process, the consumer starts executing before the producer. Due to this, the last value produced is not consumed by the consumer process. 
+
+Thus, two semaphores are needed.
+
+Functions used: 
+
+ a) void producer(int count){}
+ 
+The function 'producer' accepts an integer variable 'count' as parameter. This function uses a for loop to produce values less than or equal to count, which it assigns to global variable 'n'. It prints the total number of goods produced which is equal to the value of 'count'. Here, wait() and signal() are used to synchronise producer with consumer.
+
+b) void consumer(int count){}
+
+The function 'consumer' acceps an integer variable 'count' as parameter. This function consumes values of global variable 'n' until the value of n is less than or equal to count. It prints number of goods consumed. Synchronisation here is achieved using wait() and signal() such that the value produced in producer.c is consumed here.
+
+c) create()
+
+The create function creates a process to start running a procedure. The statement `create(producer...)' asks XINU to create a new  process that executes the procedure `producer'. The other arguments are stack size , a scheduling priority (the OS uses this to allocate processor time to the process), process name (`producer'), the count of arguments to the process, which are the arguments to the procedure `producer' and is one in number (variable 'count'). Create sets up the process, leaving it ready to run, but temporarily suspended. It returns the process id of the new process, which is an integer that identifies the created process so that it may be referenced later.
+
+d) resume()
+
+In the assignment, the main procedure passes the process id created by create statement to `resume', which starts (unsuspends) the process so it begins executing. The process executes the procedure `producer' and 'consumer', which executes the code written in produce.c and consume.c respectively.
+
+e) semcreate()
+
+Here, produced = semcreate(0) will create a semaphore named 'produced' with a count 0. Count of the semaphore is used to determine whether the process will execute or wait when a wait() or signal() call is placed. 'produced' will contain the process id returned by function semcreate().
+
+f) wait()
+
+wait() will take a semaphore as input argument, decrease its count and place it on a wait list. 
+
+g) signal()
+
+signal() will take a semaphore as input argument, increase its count and allow it to execute. 
+wait() and signal() are used in tandem to achieve synchronisation of processes.
+
+i) xsh_prodcons.c
+
+This is the main function which uses the semcreate() function to create two processes. The resume and create functions are used to run the processes.
+
+
+Tasks:
+Producer function : Cavin Dsouza
+Consumer function : Mildred Noronha
+Report : Cavin Dsouza and Mildred Noronha
