@@ -1,18 +1,12 @@
-/*  Assignment 2 */
-
 /*Global variable for producer consumer*/
-extern int n; 
-
-/*function Prototype*/
-
-void consumer(int count);
-
-void producer(int count);
-
-/* Assignment 4 */
-
+extern int n;
+ /*this is just declaration*/
 #include<future.h>
-
+/*function Prototype*/
+void producer(int);
+void consumer(int);
 uint future_cons(future *fut);
-
 uint future_prod(future *fut);
+
+/* Semaphore Declarations */
+extern sid32 produced, consumed,sem1 ;

@@ -1,20 +1,17 @@
-/*Asssignment 4*/
-
-#include<xinu.h>
+#include <xinu.h>
 #include<future.h>
-#include<prodcons.h>
+
+typedef struct futent future;
 
 uint future_cons(future *fut) 
 {
-  	int i, status;
+	int i, status;
   	status = future_get(fut, &i);
-
- 	if (status < 1) 
+  	if (status < 1) 
 	{
     		printf("future_get failed\n");
-    	        return -1;
+    		return SYSERR;
   	}
-
   	printf("it produced %d\n", i);
   	return OK;
 }
