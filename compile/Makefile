@@ -13,17 +13,21 @@ NODE=0
 GPORT=556${NODE}
 
 ifndef PLATFORM
-$(error PLATFORM is not set in Makedefs or with 'make PLATFORM=arm-qemu')
+$(error PLATFORM is not set. Edit your Makedefs file and add 'PLATFORM=arm-qemu'or 'PLATFORM=arm-bbb')
+endif
+
+ifeq ($(MMU),true)
+	VM = -DMMU
 endif
 
 ifeq ($(PLATFORM),arm-qemu)
-	PLAT_CFLAGS =  -DARM_QEMU -mcpu=arm1176jz-s -ggdb3 
+	PLAT_CFLAGS =  -DARM_QEMU $(VM) -mcpu=arm1176jz-s -ggdb3
 	PLAT_LOADADDR = 0x00010000
 else ifeq ($(PLATFORM),arm-bbb)
-	PLAT_CFLAGS =  -DARM_BBB -mcpu=cortex-a8 
+	PLAT_CFLAGS =  -DARM_BBB -mcpu=cortex-a8 -g
 	PLAT_LOADADDR = 0x81000000
 else ifeq ($(PLATFORM),x86-galileo)
-	PLAT_CFLAGS =   
+	PLAT_CFLAGS =
 endif
 
 TOPDIR		=	..
@@ -56,7 +60,7 @@ REBUILDFLAGS 	+=	-s $(TOPDIR)/device/tty			\
 			-s $(TOPDIR)/device/lfs			\
 			-s $(TOPDIR)/device/uart		\
 			-s $(TOPDIR)/device/uart-pl011		\
-			-s $(TOPDIR)/device/loopback		
+			-s $(TOPDIR)/device/loopback
 
 else ifeq ($(PLATFORM),arm-bbb)
 REBUILDFLAGS    +=	-s $(TOPDIR)/device/tty			\
@@ -138,7 +142,7 @@ uboot-tool/mkimage: uboot-tool/mkimage.c
 	@echo making mkimage
 	@(cd uboot-tool; make)
 
-$(BLDDIRS): 
+$(BLDDIRS):
 	@mkdir -p $(BLDDIRS)
 
 objects: $(LD_LIST)
@@ -162,7 +166,7 @@ configure:
 
 clean:
 	@echo removing .o files
-	@rm -f ${LD_LIST}
+	@rm -f binaries/*.o
 	@echo   removing configuration files ...
 	@rm -f $(CONFH) $(CONFC)
 	@(cd $(TOPDIR)/config; make clean)
@@ -176,13 +180,13 @@ install: xinu
 	cp xinu.boot /tftpboot
 
 etags:
-	@(cd $(TOPDIR); find . -name '*.[ch]' -exec etags -a {} \;)
+	@(cd $(TOPDIR); find . -name '*.[chS]' -exec etags -a {} \;)
 
 qemu: xinu
-	qemu-system-arm -M versatilepb -m 512M -nographic -cpu arm1176  -kernel xinu.boot 
+	export QEMU_AUDIO_DRV=wav; export QEMU_WAV_PATH=$(TOPDIR)/compile/.wav.wav; qemu-system-arm -M versatilepb -m 512M -nographic -cpu arm1176 -kernel xinu.boot
 
 qemu-gdb: xinu
-	qemu-system-arm -M versatilepb -m 512M -nographic -cpu arm1176  -kernel xinu.boot -S -gdb tcp::${GPORT}
+		export QEMU_AUDIO_DRV=wav; export QEMU_WAV_PATH=$(TOPDIR)/compile/.wav.wav;qemu-system-arm -M versatilepb -m 512M -nographic -cpu arm1176 -kernel xinu.boot -S -gdb tcp::${GPORT}
 #--------------------------------------------------------------------------------
 # Locations of source directories and exceptions (.c and .[sS] files to exclude)
 #--------------------------------------------------------------------------------
