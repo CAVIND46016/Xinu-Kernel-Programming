@@ -88,3 +88,8 @@ extern shellcmd xsh_hello	(int32, char *[]);
 /* in file xsh_prodcons.c*/
 extern shellcmd xsh_prodcons	(int32, char *[]);
 /* Added for assignment 2 210916*/
+
+/* Added for assignment  7 211116*/
+/* in file xsh_fstest.c*/
+extern shellcmd xsh_fstest	();
+/* Added for assignment  7 2 211116*/

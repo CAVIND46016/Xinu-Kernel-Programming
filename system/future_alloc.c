@@ -1,30 +1,19 @@
-/* future_alloc.c - future_alloc */
-
-#include <xinu.h>
-#include<future.h>
-/*------------------------------------------------------------------------
- *  future_alloc-allocates a new future in given mode
- *------------------------------------------------------------------------
+/* Assignment 4 */ 
+ 
+ /*Description:
+ 	Allocates a new future (in the FUTURE_EMPTY state) in given mode. We will use getmem() call to allocate space for the new future.
+      Parameters:
+ 	int future_flag: flag to be set for this future
+      Return:
+ 	future: NULL or a valid future reference
  */
-
-typedef struct futent future;
-
-future* future_alloc(int future_flag){
-	future* f=(future*)getmem(sizeof(future));
-	int *temp;
-	f->flag=future_flag;
-	f->state=FUTURE_EMPTY;
-	temp=(int*)getmem(sizeof(int));
-	f->value=temp;
-	*temp=10;
-	
-	if(future_flag == FUTURE_SHARED)
-		queueinit(&f->get_queue);
-	
-	else if(future_flag == FUTURE_QUEUE)
-	{
-		queueinit(&f->get_queue);
-		queueinit(&f->get_queue);
-	}
-	return f;
-}
+ 
+ #include<future.h>
+ 
+ future* future_alloc(int future_flag)
+ {
+ 	future *f 	= getmem(sizeof(future));
+ 	f->flag 		= future_flag;
+ 	f->state 	= FUTURE_EMPTY;
+ 	return f;
+ } 

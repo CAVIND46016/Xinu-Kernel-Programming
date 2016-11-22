@@ -1,17 +1,23 @@
-/* future_free.c - future_free */
-
-#include <xinu.h>
-#include<future.h>
-/*------------------------------------------------------------------------
- *  future_free-frees the allocated future
- *------------------------------------------------------------------------
+/* Assignment 4 */
+ 
+ /*Description:
+ 	Free the allocated future. This function will simply free the space assigned to Future. Use freemem(). call to free the space.
+     Parameters:
+ 	future* f: future to free
+     Return:
+ 	syscall: SYSERR or OK
  */
+ 
+ #include<future.h>
 
-typedef struct futent future;
-
- syscall future_free(future* f) 
-{
-	return freemem(f,sizeof(f));
-
-}
-	
+syscall future_free(future *f)
+ {
+ 	int r;
+	f->state = FUTURE_EMPTY;
+ 	r=freemem(f, sizeof(future));
+ 	if(r !=SYSERR)
+ 	{
+ 		return OK;
+ 	}
+ 	return SYSERR;
+ } 
