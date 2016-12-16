@@ -68,6 +68,7 @@ static	void arp_dmp ()
 		for (j = 1; j < ARP_HALEN; j++) {
 			printf(":%02X", arptr->arhaddr[j]);
 		}
+
 		//Added by Cavin on 15/12/2016
 		printf(" %d", arptr->clktime);
 		printf("\n");

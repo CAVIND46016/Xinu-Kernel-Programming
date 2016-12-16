@@ -214,6 +214,7 @@ void	arp_in (
 		if (arptr->arstate == AR_PENDING) {
 			/* Mark resolved and notify waiting process */
 			arptr->arstate = AR_RESOLVED;
+
 			//Added by Cavin on 15/12/2015
 			arptr->clktime = clktime;
 			send(arptr->arpid, OK);
@@ -254,6 +255,7 @@ void	arp_in (
 		arptr->arpaddr = pktptr->arp_sndpa;
 		memcpy(arptr->arhaddr, pktptr->arp_sndha, ARP_HALEN);
 		arptr->arstate = AR_RESOLVED;
+
 		//Added by Cavin on 15/12/2015
 		arptr->clktime = clktime;
 	}
