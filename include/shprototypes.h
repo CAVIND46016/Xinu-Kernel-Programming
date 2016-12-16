@@ -91,5 +91,10 @@ extern shellcmd xsh_prodcons	(int32, char *[]);
 
 /* Added for assignment  7 211116*/
 /* in file xsh_fstest.c*/
-extern shellcmd xsh_fstest	();
+extern shellcmd xsh_fstest	(int32, char *[]);
 /* Added for assignment  7 2 211116*/
+
+
+//Added by Cavin 15/12/2015
+/* in file xsh_udptest.c */
+extern shellcmd xsh_udptest      (int32, char *[]);

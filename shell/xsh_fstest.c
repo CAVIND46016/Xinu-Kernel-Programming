@@ -1,219 +1,133 @@
-#include <xinu.h>
-#include <kernel.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <string.h>
-
-
-#if FS
 #include <fs.h>
+#define SIZE 1200
 
-static struct fsystem fsd;
-int dev0_numblocks;
-int dev0_blocksize;
-char *dev0_blocks;
+void fs_testbitmask(void);
 
-extern int dev0;
-
-char block_cache[512];
-
-#define SB_BLK 0
-#define BM_BLK 1
-#define RT_BLK 2
-
-#define NUM_FD 16
-struct filetable oft[NUM_FD];
-int next_open_fd = 0;
-
-
-#define INODES_PER_BLOCK (fsd.blocksz / sizeof(struct inode))
-#define NUM_INODE_BLOCKS (( (fsd.ninodes % INODES_PER_BLOCK) == 0) ? fsd.ninodes / INODES_PER_BLOCK : (fsd.ninodes / INODES_PER_BLOCK) + 1)
-#define FIRST_INODE_BLOCK 2
-
-int fs_fileblock_to_diskblock(int dev, int fd, int fileblock);
-
-/* YOUR CODE GOES HERE */
-
-int fs_fileblock_to_diskblock(int dev, int fd, int fileblock) {
-  int diskblock;
-
-  if (fileblock >= INODEBLOCKS - 2) {
-    printf("No indirect block support\n");
-    return SYSERR;
-  }
-
-  diskblock = oft[fd].in.blocks[fileblock]; //get the logical block address
-
-  return diskblock;
-}
-
-/* read in an inode and fill in the pointer */
-int
-fs_get_inode_by_num(int dev, int inode_number, struct inode *in) {
-  int bl, inn;
-  int inode_off;
-
-  if (dev != 0) {
-    printf("Unsupported device\n");
-    return SYSERR;
-  }
-  if (inode_number > fsd.ninodes) {
-    printf("fs_get_inode_by_num: inode %d out of range\n", inode_number);
-    return SYSERR;
-  }
-
-  bl = inode_number / INODES_PER_BLOCK;
-  inn = inode_number % INODES_PER_BLOCK;
-  bl += FIRST_INODE_BLOCK;
-
-  inode_off = inn * sizeof(struct inode);
-
-  /*
-  printf("in_no: %d = %d/%d\n", inode_number, bl, inn);
-  printf("inn*sizeof(struct inode): %d\n", inode_off);
-  */
-
-  bs_bread(dev0, bl, 0, &block_cache[0], fsd.blocksz);
-  memcpy(in, &block_cache[inode_off], sizeof(struct inode));
-
-  return OK;
-
-}
-
-int
-fs_put_inode_by_num(int dev, int inode_number, struct inode *in) {
-  int bl, inn;
-
-  if (dev != 0) {
-    printf("Unsupported device\n");
-    return SYSERR;
-  }
-  if (inode_number > fsd.ninodes) {
-    printf("fs_put_inode_by_num: inode %d out of range\n", inode_number);
-    return SYSERR;
-  }
-
-  bl = inode_number / INODES_PER_BLOCK;
-  inn = inode_number % INODES_PER_BLOCK;
-  bl += FIRST_INODE_BLOCK;
-
-  /*
-  printf("in_no: %d = %d/%d\n", inode_number, bl, inn);
-  */
-
-  bs_bread(dev0, bl, 0, block_cache, fsd.blocksz);
-  memcpy(&block_cache[(inn*sizeof(struct inode))], in, sizeof(struct inode));
-  bs_bwrite(dev0, bl, 0, block_cache, fsd.blocksz);
-
-  return OK;
-}
-     
-int fs_mkfs(int dev, int num_inodes) {
-  int i;
-  
-  if (dev == 0) {
-    fsd.nblocks = dev0_numblocks;
-    fsd.blocksz = dev0_blocksize;
-  }
-  else {
-    printf("Unsupported device\n");
-    return SYSERR;
-  }
-
-  if (num_inodes < 1) {
-    fsd.ninodes = DEFAULT_NUM_INODES;
-  }
-  else {
-    fsd.ninodes = num_inodes;
-  }
-
-  i = fsd.nblocks;
-  while ( (i % 8) != 0) {i++;}
-  fsd.freemaskbytes = i / 8; 
-  
-  if ((fsd.freemask = getmem(fsd.freemaskbytes)) == (void *)SYSERR) {
-    printf("fs_mkfs memget failed.\n");
-    return SYSERR;
-  }
-  
-  /* zero the free mask */
-  for(i=0;i<fsd.freemaskbytes;i++) {
-    fsd.freemask[i] = '\0';
-  }
-  
-  fsd.inodes_used = 0;
-  
-  /* write the fsystem block to SB_BLK, mark block used */
-  fs_setmaskbit(SB_BLK);
-  bs_bwrite(dev0, SB_BLK, 0, &fsd, sizeof(struct fsystem));
-  
-  /* write the free block bitmask in BM_BLK, mark block used */
-  fs_setmaskbit(BM_BLK);
-  bs_bwrite(dev0, BM_BLK, 0, fsd.freemask, fsd.freemaskbytes);
-
-  return 1;
-}
-
-void
-fs_print_fsd(void) {
-
-  printf("fsd.ninodes: %d\n", fsd.ninodes);
-  printf("sizeof(struct inode): %d\n", sizeof(struct inode));
-  printf("INODES_PER_BLOCK: %d\n", INODES_PER_BLOCK);
-  printf("NUM_INODE_BLOCKS: %d\n", NUM_INODE_BLOCKS);
-}
-
-/* specify the block number to be set in the mask */
-int fs_setmaskbit(int b) {
-  int mbyte, mbit;
-  mbyte = b / 8;
-  mbit = b % 8;
-
-  fsd.freemask[mbyte] |= (0x80 >> mbit);
-  return OK;
-}
-
-/* specify the block number to be read in the mask */
-int fs_getmaskbit(int b) {
-  int mbyte, mbit;
-  mbyte = b / 8;
-  mbit = b % 8;
-
-  return( ( (fsd.freemask[mbyte] << mbit) & 0x80 ) >> 7);
-  return OK;
-
-}
-
-/* specify the block number to be unset in the mask */
-int fs_clearmaskbit(int b) {
-  int mbyte, mbit, invb;
-  mbyte = b / 8;
-  mbit = b % 8;
-
-  invb = ~(0x80 >> mbit);
-  invb &= 0xFF;
-
-  fsd.freemask[mbyte] &= invb;
-  return OK;
-}
-
-/* This is maybe a little overcomplicated since the lowest-numbered
-   block is indicated in the high-order bit.  Shift the byte by j
-   positions to make the match in bit7 (the 8th bit) and then shift
-   that value 7 times to the low-order bit to print.  Yes, it could be
-   the other way...  */
-void fs_printfreemask(void) {
-  int i,j;
-
-  for (i=0; i < fsd.freemaskbytes; i++) {
-    for (j=0; j < 8; j++) {
-      printf("%d", ((fsd.freemask[i] << j) & 0x80) >> 7);
+/**
+ * @ingroup shell
+ *
+ * Shell command fstest.
+ * @param nargs  number of arguments in args array
+ * @param args   array of arguments
+ * @return OK for success, SYSERR for syntax error
+ */
+ shellcmd xsh_fstest(int nargs, char *args[])
+{
+    int rval;
+    int fd, i, j;
+    char *buf1, *buf2;
+    
+    
+    /* Output help, if '--help' argument was supplied */
+    if (nargs == 2 && strncmp(args[1], "--help", 7) == 0)
+    {
+        printf("Usage: %s\n\n", args[0]);
+        printf("Description:\n");
+        printf("\tFilesystem Test\n");
+        printf("Options:\n");
+        printf("\t--help\tdisplay this help and exit\n");
+        return OK;
     }
-    if ( (i % 8) == 7) {
-      printf("\n");
+
+    /* Check for correct number of arguments */
+
+if (nargs > 2)
+    {
+        fprintf(stderr, "%s: too many arguments\n", args[0]);
+        fprintf(stderr, "Try '%s --help' for more information\n",
+                args[0]);
+        return SYSERR;
     }
-  }
-  printf("\n");
+    if (nargs < 2)
+    {
+        fprintf(stderr, "%s: too few arguments\n", args[0]);
+        fprintf(stderr, "Try '%s --help' for more information\n",
+                args[0]);
+        return SYSERR;
+    }
+
+#ifdef FS
+
+    bs_mkdev(0, MDEV_BLOCK_SIZE, MDEV_NUM_BLOCKS); /* device "0" and default blocksize (=0) and count */
+    fs_mkfs(0,DEFAULT_NUM_INODES); /* bsdev 0*/
+    fs_testbitmask();
+    fs_mount(0);
+
+    buf1 = getmem(SIZE*sizeof(char));
+    buf2 = getmem(SIZE*sizeof(char));
+    
+    // Create test file
+   //  fd = fs_create("Test_File", O_CREAT);
+    fd = fs_create(args[1], O_CREAT);
+       
+    // Fill buffer with random stuff
+    for(i=0; i<SIZE; i++)
+    {
+        j = i%(127-33);
+        j = j+33;
+        buf1[i] = (char) j;
+    }
+    
+    rval = fs_write(fd,buf1,SIZE);
+    if(rval == 0 || rval != SIZE )
+    {
+        printf("\n\r File write failed");
+        goto clean_up;
+    }
+
+// Now my file offset is pointing at EOF file, i need to bring it back to start of file
+    // Assuming here implementation of fs_seek is like "original_offset = original_offset + input_offset_from_fs_seek"
+    fs_seek(fd,-rval); 
+    
+    //read the file 
+    rval = fs_read(fd, buf2, rval);
+    buf2[rval] = EOF; // TODO: Write end of file symbol i.e. slash-zero instead of EOF. I can not do this because of WIKI editor limitation    
+
+    if(rval == 0)
+    {
+        printf("\n\r File read failed");
+        goto clean_up;
+    }
+        
+    printf("\n\rContent of file %s",buf2);
+    
+    rval = fs_close(fd);
+    if(rval != OK)
+    {
+        printf("\n\rReturn val for fclose : %d",rval);
+    }
+
+clean_up:
+    freemem(buf1,SIZE);
+    freemem(buf2,SIZE);
+    
+#else
+    printf("No filesystem support\n");
+#endif
+
+    return OK;
 }
 
-#endif /* FS */
+void fs_testbitmask(void) {
+
+    fs_setmaskbit(31); fs_setmaskbit(95); fs_setmaskbit(159);fs_setmaskbit(223);
+    fs_setmaskbit(287); fs_setmaskbit(351); fs_setmaskbit(415);fs_setmaskbit(479);
+    fs_setmaskbit(90); fs_setmaskbit(154);fs_setmaskbit(218); fs_setmaskbit(282);
+    fs_setmaskbit(346); fs_setmaskbit(347); fs_setmaskbit(348); fs_setmaskbit(349);
+    fs_setmaskbit(350); fs_setmaskbit(100); fs_setmaskbit(164);fs_setmaskbit(228);
+  fs_setmaskbit(292); fs_setmaskbit(356); fs_setmaskbit(355); fs_setmaskbit(354);
+    fs_setmaskbit(353); fs_setmaskbit(352);
+    
+   //fs_printfreemask();
+
+    fs_clearmaskbit(31); fs_clearmaskbit(95); fs_clearmaskbit(159);fs_clearmaskbit(223);
+    fs_clearmaskbit(287); fs_clearmaskbit(351); fs_clearmaskbit(415);fs_clearmaskbit(479);
+    fs_clearmaskbit(90); fs_clearmaskbit(154);fs_clearmaskbit(218); fs_clearmaskbit(282);
+    fs_clearmaskbit(346); fs_clearmaskbit(347); fs_clearmaskbit(348); fs_clearmaskbit(349);
+    fs_clearmaskbit(350); fs_clearmaskbit(100); fs_clearmaskbit(164);fs_clearmaskbit(228);
+    fs_clearmaskbit(292); fs_clearmaskbit(356); fs_clearmaskbit(355); fs_clearmaskbit(354);
+    fs_clearmaskbit(353); fs_clearmaskbit(352);
+
+    //fs_printfreemask();
+
+}

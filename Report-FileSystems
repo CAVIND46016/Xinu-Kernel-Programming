@@ -1,0 +1,14 @@
+/* Assignment 7 Report*/
+/* /home/xinu-os/OS-FA16/Report_FileSystems*/
+
+
+File creation has been implemented in the Xinu root directory (/root) using functions like
+fs_open, fs_close, fs_create, fs_seek and fs_read.
+
+The code checks whether user entered file exists in the root directory or not. If yes, it throws an error saying file already created , else
+it creates the file with random values as its contents.
+
+Tasks:
+
+
+Coding and report activity, jointly done by Cavin Dsouza & Mildred Noronha

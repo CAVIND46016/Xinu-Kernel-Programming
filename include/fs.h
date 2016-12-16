@@ -1,7 +1,9 @@
+#include <stddef.h>
+#include "xinu.h"
 #ifndef FS_H
 #define FS_H
 
-/* Modes for file creation*/ 
+/* Modes of file*/ 
 #define O_CREAT 11 
 /* Flags of file*/ 
 #define O_RDONLY 0 
@@ -36,6 +38,7 @@ struct inode {
 struct filetable {
   int state;
   int fileptr;
+  int flags;
   struct dirent *de;
   struct inode in;
 };
@@ -93,3 +96,4 @@ void fs_printfreemask(void);
 void fs_print_fsd(void);
 
 #endif /* FS_H */
+
